@@ -1,0 +1,38 @@
+# Local configuration
+.env
+.env.*
+!.env.example
+.venv/
+.conda/
+node_modules/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+# Generated runtime data
+runs/
+results/
+outputs/
+artifacts/
+reports/
+evidence/
+.agh*/
+.runtime/
+.locks/
+.ledger.json
+*.log
+*.pid
+*.sock
+*.sqlite*
+*.db
+.DS_Store
+
+# Optional build products
+.ledger.json
+.cache/
+*.egg-info/
+runtime/node
+runtime/node/bin/node
+runtime/system/
+
+tools/stage/node_modules/

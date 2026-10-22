@@ -1,0 +1,6 @@
+.agnes-flight-card { width: min(340px, 100%); box-sizing: border-box; padding: 10px 14px; margin: 4px 0; border: 1px solid #61c6e84d; border-radius: 12px; background: #61c6e810; color: inherit; font-size: 12px; }
+.agnes-flight-title { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.agnes-flight-title a { color: #4388b5; text-decoration: none; font-size: 11px; }
+.agnes-flight-phase { margin: 6px 0; font-weight: 600; }
+.agnes-flight-meta { opacity: .7; font-size: 11px; }
+.agnes-flight-card progress { width: 100%; height: 5px; accent-color: #4faecc; display: block; margin: 8px 0; }

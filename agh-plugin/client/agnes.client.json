@@ -1,0 +1,11 @@
+{
+  "client": {
+    "entry": "./index.js",
+    "styles": ["./index.css"],
+    "slots": ["conversation.session.header.corner"],
+    "slotCatalogVersion": "dsh-client-slots/v1",
+    "services": ["drone.show.progress"],
+    "projections": [],
+    "publicConfig": {}
+  }
+}

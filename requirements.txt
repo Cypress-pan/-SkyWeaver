@@ -1,0 +1,7 @@
+numpy
+scipy
+pillow
+pybullet
+gymnasium
+transforms3d
+tornado

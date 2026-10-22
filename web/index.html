@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AGNES · 无人机秀</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M8 38 24 8l16 30M15 27h18" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><circle cx="24" cy="8" r="3" fill="currentColor"/><circle cx="8" cy="38" r="3" fill="currentColor"/><circle cx="40" cy="38" r="3" fill="currentColor"/></svg></div>
+        <div>
+          <h1>AGNES <span class="brand-caption">无人机秀</span></h1>
+          <p class="subtitle">在 AGH 说一句话，自动编队与表演</p>
+        </div>
+      </div>
+      <div class="connection" id="connection" data-state="connecting">
+        <span class="conn-dot" id="conn-dot"></span>
+        <span class="conn-text" id="conn-text">CONNECTING</span>
+        <span class="retry-text" id="retry-text"></span>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="viewport" id="viewport">
+        <canvas id="scene" aria-label="无人机秀实时画面"></canvas>
+        <div class="show-heading"><span id="show-phase">等待下一场表演</span><strong id="show-content"></strong></div>
+        <div class="reference-label" id="reference-label" hidden>REFERENCE TARGETS — not actual positions</div>
+        <div class="mode-badge" id="mode-badge" data-mode="live">LIVE</div>
+        <div class="ready-banner" id="ready-banner" hidden>准备就绪 · 在 AGH 说出你想看的编队</div>
+        <div class="overlay" id="disconnected-overlay">
+          <div class="overlay-card">
+            <div class="overlay-title" id="overlay-title">DISCONNECTED</div>
+            <div class="overlay-detail" id="overlay-detail">Waiting for ws://127.0.0.1:8765/ws</div>
+            <div class="overlay-sub" id="overlay-sub">The last received frame stays dimmed; no target coordinates are shown as actual.</div>
+          </div>
+        </div>
+        <div class="legend">
+          <span class="legend-item"><span class="actual-swatch"></span>Actual positions (state.positions)</span>
+          <span class="legend-item reference-legend" id="reference-legend" hidden>
+            <span class="reference-swatch"></span>Reference target only (state.target_positions)
+          </span>
+        </div>
+        <div class="canvas-hud">
+          <span id="hud-drones">0 drones</span>
+          <span id="hud-segment">no segment</span>
+          <span id="hud-tap">拖动旋转 · 滚轮缩放</span>
+        </div>
+        <div class="stage-controls">
+          <button type="button" id="btn-reset">自动镜头</button>
+          <button type="button" id="btn-closeup">机体近景</button>
+          <button type="button" id="btn-fullscreen">全屏舞台</button>
+          <button type="button" id="btn-export">导出画面</button>
+          <button type="button" id="btn-record">录制整场</button>
+          <a id="video-save" hidden>保存视频</a>
+        </div>
+        <div class="verification" id="verification" hidden></div>
+        <div class="replay-transport" id="replay-transport" hidden>
+          <button id="btn-replay-pause" type="button">暂停</button>
+          <input id="replay-seek" type="range" min="0" max="1000" value="0" aria-label="回放进度" />
+          <span id="replay-clock"></span>
+        </div>
+      </section>
+
+      <aside class="panel">
+        <div class="panel-head">
+          <h2>表演状态</h2>
+          <span class="status-chip" id="status-chip">unknown</span>
+        </div>
+        <div class="live-state" id="live-state" data-state="offline">WAITING FOR SERVICE</div>
+
+        <div class="cards">
+          <div class="card">
+            <div class="card-label">当前阶段</div>
+            <div class="card-value" id="current-segment">—</div>
+            <div class="card-sub" id="current-segment-id"></div>
+          </div>
+          <div class="card">
+            <div class="card-label">Pending segment</div>
+            <div class="card-value" id="pending-segment">none</div>
+            <div class="card-sub" id="pending-segment-id"></div>
+          </div>
+          <div class="card">
+            <div class="card-label">表演时间</div>
+            <div class="card-value" id="sim-time">—</div>
+            <div class="card-sub" id="drones-count">0 drones</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Show / request revision</div>
+            <div class="card-value" id="revisions">— / —</div>
+            <div class="card-sub">show_revision / request_revision</div>
+          </div>
+          <div class="card error-number">
+            <div class="card-label">Actual max error</div>
+            <div class="card-value" id="max-error">—</div>
+            <div class="card-sub" id="rms-error">RMS —</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Last message</div>
+            <div class="card-value small" id="last-message">—</div>
+            <div class="card-sub" id="last-message-age">no data yet</div>
+          </div>
+        </div>
+
+        <div class="color-block" id="color-block">
+          <div class="color-head">
+            <span class="color-title">Live segment colors</span>
+            <span class="color-source" id="color-source">no active segment</span>
+          </div>
+          <div class="color-swatches" id="color-swatches"></div>
+          <div class="color-note" id="color-note">Actual points and trails use these live colors. Reference targets stay amber, dashed, and labeled.</div>
+        </div>
+        <div class="progress-block">
+          <div class="progress-top"><span>本幕进度</span><span id="progress-text">0%</span></div>
+          <div class="progress-track"><span class="progress-fill" id="progress-fill"></span></div>
+        </div>
+
+        <div class="error-block" id="error-block">
+          <div class="error-title">运行情况</div>
+          <div class="error-text" id="error-text">No error reported by the service.</div>
+          <div class="warning-text" id="warning-text" hidden></div>
+        </div>
+
+        <div class="controls">
+          <button type="button" id="btn-targets" aria-pressed="false">显示规划参考</button>
+          <button type="button" id="btn-replay" class="primary replay-button" hidden>Replay last run</button>
+          <span class="replay-status" id="replay-status"></span>
+          <label class="check"><input type="checkbox" id="chk-follow" checked /> 自动构图</label>
+        </div>
+
+        <div class="events">
+          <h3>Recent service events</h3>
+          <ul id="event-list"><li class="muted">Waiting for telemetry…</li></ul>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="footer">
+      <button id="btn-details" type="button">运行详情</button>
+    </footer>
+  </div>
+  <dialog id="capture-preview" aria-label="画面导出">
+    <div class="capture-actions">
+      <a id="capture-save" download="drone-show.png">保存 PNG</a>
+      <button id="capture-close" type="button">关闭预览</button>
+    </div>
+    <img id="capture-image" alt="当前无人机秀画面" />
+  </dialog>
+  <script src="core.js"></script>
+  <script src="stage.bundle.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
